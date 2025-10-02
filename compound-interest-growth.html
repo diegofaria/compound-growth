@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compound Interest Visualizer</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js and Annotation Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.2.1/chartjs-plugin-annotation.min.js"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles for a better look and feel */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for the range slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #4a5568; /* gray-700 */
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #6366f1; /* indigo-500 */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0; /* slate-200 */
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #6366f1; /* indigo-500 */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0; /* slate-200 */
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-white">Compound Growth Visualizer</h1>
+            <p class="text-slate-400 mt-2">See how small, consistent investments can grow exponentially over time.</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-2xl shadow-indigo-900/20 overflow-hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3">
+                
+                <!-- Controls and Summary Panel -->
+                <div class="col-span-1 p-6 md:p-8 border-b lg:border-b-0 lg:border-r border-slate-700">
+                    <h2 class="text-2xl font-semibold mb-6 text-white">Investment Setup</h2>
+                    
+                    <!-- Input Fields -->
+                    <div class="space-y-6">
+                        <div>
+                            <label for="initialInvestment" class="block text-sm font-medium text-slate-400 mb-2">Initial Investment ($)</label>
+                            <input type="number" id="initialInvestment" value="10000" class="w-full bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5 transition">
+                        </div>
+                        <div>
+                            <label for="monthlyInvestment" class="block text-sm font-medium text-slate-400 mb-2">Monthly Investment ($)</label>
+                            <input type="number" id="monthlyInvestment" value="500" class="w-full bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5 transition">
+                        </div>
+                        <div>
+                            <label for="annualInterestRate" class="block text-sm font-medium text-slate-400 mb-2">Annual Interest Rate (%)</label>
+                            <input type="number" id="annualInterestRate" value="8" class="w-full bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5 transition">
+                        </div>
+                         <div>
+                            <label for="annualInflationRate" class="block text-sm font-medium text-slate-400 mb-2">Annual Inflation Rate (%)</label>
+                            <input type="number" id="annualInflationRate" value="3" class="w-full bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5 transition">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label for="investmentPeriod" class="block text-sm font-medium text-slate-400">Investment Period (Years)</label>
+                                <span id="investmentPeriodValue" class="text-indigo-400 font-semibold">30</span>
+                            </div>
+                            <input type="range" id="investmentPeriod" min="1" max="50" value="30" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
+                    
+                    <!-- Summary Display -->
+                    <div class="mt-10 pt-6 border-t border-slate-700 space-y-4">
+                         <h3 class="text-xl font-semibold text-white mb-4">Projected Growth Summary</h3>
+                         <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg">
+                            <span class="text-slate-400">Total Principal Invested</span>
+                            <span id="totalPrincipal" class="font-bold text-lg text-white">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-700/50 p-3 rounded-lg">
+                            <span class="text-slate-400">Total Returns</span>
+                            <span id="totalReturns" class="font-bold text-lg text-emerald-400">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-lg border border-indigo-500">
+                            <span class="text-white font-semibold">Final Portfolio Value</span>
+                            <span id="totalValue" class="font-bold text-2xl text-indigo-400">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Panel -->
+                <div class="col-span-1 lg:col-span-2 p-6 md:p-8 flex flex-col">
+                    <div class="flex-grow h-[400px] md:h-full w-full">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button id="toggleTableBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                            Show Data Table
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Table Section -->
+        <div id="dataTableContainer" class="hidden mt-8 bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-2xl p-6">
+             <h2 class="text-2xl font-semibold mb-4 text-white">Year-by-Year Breakdown</h2>
+             <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-slate-400">
+                    <thead class="text-xs text-slate-300 uppercase bg-slate-700">
+                        <tr>
+                            <th scope="col" class="px-6 py-2">Year</th>
+                            <th scope="col" class="px-6 py-2">Principal</th>
+                            <th scope="col" class="px-6 py-2">Returns</th>
+                            <th scope="col" class="px-6 py-2">Total Ratio (Ret/Prin)</th>
+                            <th scope="col" class="px-6 py-2">Annual Ratio (Ret/Contrib)</th>
+                            <th scope="col" class="px-6 py-2">Annual Ratio &Delta;</th>
+                            <th scope="col" class="px-6 py-2">Total Value</th>
+                            <th scope="col" class="px-6 py-2">Real Value (Purchasing Power)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- Rows will be injected by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Element References
+        const initialInvestmentEl = document.getElementById('initialInvestment');
+        const monthlyInvestmentEl = document.getElementById('monthlyInvestment');
+        const annualInterestRateEl = document.getElementById('annualInterestRate');
+        const annualInflationRateEl = document.getElementById('annualInflationRate');
+        const investmentPeriodEl = document.getElementById('investmentPeriod');
+        const investmentPeriodValueEl = document.getElementById('investmentPeriodValue');
+
+        const totalPrincipalEl = document.getElementById('totalPrincipal');
+        const totalReturnsEl = document.getElementById('totalReturns');
+        const totalValueEl = document.getElementById('totalValue');
+        
+        const chartCanvas = document.getElementById('growthChart');
+        let growthChart; // To hold the Chart.js instance
+
+        const toggleTableBtn = document.getElementById('toggleTableBtn');
+        const dataTableContainer = document.getElementById('dataTableContainer');
+        const dataTableBody = document.getElementById('dataTableBody');
+
+
+        /**
+         * Formats a number into a currency string (e.g., $1,234.56)
+         * @param {number} value The number to format
+         * @returns {string} The formatted currency string
+         */
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        /**
+         * Calculates compound growth data year by year.
+         */
+        function calculateCompoundGrowth(initialInvestment, monthlyInvestment, annualRate, years, inflationRate) {
+            const data = {
+                labels: [],
+                principal: [],
+                returns: [],
+                realValue: [],
+                milestones: [],
+                annualReturns: [],
+                annualRatioDiff: []
+            };
+
+            let totalValue = initialInvestment;
+            let totalInvested = initialInvestment;
+            const monthlyRate = annualRate / 100 / 12;
+            const totalMonths = years * 12;
+            let nextMilestone = 100000;
+            let lastMilestoneYear = 0;
+            
+            let lastYearTotalValue = initialInvestment;
+            let lastYearTotalInvested = initialInvestment;
+            let lastYearAnnualRatio = 0;
+
+            for (let month = 1; month <= totalMonths; month++) {
+                totalValue += monthlyInvestment;
+                totalInvested += monthlyInvestment;
+                totalValue *= (1 + monthlyRate);
+
+                // Check for milestones
+                if (totalValue >= nextMilestone) {
+                    const currentYear = month / 12;
+                    const timeFromPrevious = currentYear - lastMilestoneYear;
+                    data.milestones.push({ year: currentYear, value: nextMilestone, timeFromPrevious: timeFromPrevious });
+                    nextMilestone += 100000;
+                    lastMilestoneYear = currentYear;
+                }
+                
+                if (month % 12 === 0) {
+                    const currentYear = month / 12;
+                    const currentReturns = totalValue - totalInvested;
+                    const inflationAdjustedValue = totalValue / Math.pow(1 + inflationRate / 100, currentYear);
+
+                    const annualContribution = totalInvested - lastYearTotalInvested;
+                    const annualReturn = totalValue - lastYearTotalValue - annualContribution;
+                    
+                    const currentAnnualRatio = annualContribution > 0 ? (annualReturn / annualContribution) : 0;
+                    const ratioDiff = currentAnnualRatio - lastYearAnnualRatio;
+
+                    data.labels.push(`${currentYear}`);
+                    data.principal.push(totalInvested);
+                    data.returns.push(currentReturns);
+                    data.realValue.push(inflationAdjustedValue);
+                    data.annualReturns.push(annualReturn);
+                    data.annualRatioDiff.push(ratioDiff);
+
+                    lastYearTotalValue = totalValue;
+                    lastYearTotalInvested = totalInvested;
+                    lastYearAnnualRatio = currentAnnualRatio;
+                }
+            }
+
+            return {
+                labels: ['0', ...data.labels],
+                principal: [initialInvestment, ...data.principal],
+                returns: [0, ...data.returns],
+                realValue: [initialInvestment, ...data.realValue],
+                annualReturns: [0, ...data.annualReturns],
+                annualRatioDiff: [0, ...data.annualRatioDiff],
+                milestones: data.milestones,
+                summary: {
+                    totalInvested: totalInvested,
+                    totalValue: totalValue,
+                    totalReturns: totalValue - totalInvested,
+                }
+            };
+        }
+
+        /**
+         * Updates the chart and summary display based on user input.
+         */
+        function updateDisplay() {
+            const initialInvestment = parseFloat(initialInvestmentEl.value) || 0;
+            const monthlyInvestment = parseFloat(monthlyInvestmentEl.value) || 0;
+            const annualRate = parseFloat(annualInterestRateEl.value) || 0;
+            const inflationRate = parseFloat(annualInflationRateEl.value) || 0;
+            const years = parseInt(investmentPeriodEl.value, 10);
+            
+            investmentPeriodValueEl.textContent = years;
+
+            const growthData = calculateCompoundGrowth(initialInvestment, monthlyInvestment, annualRate, years, inflationRate);
+            
+            totalPrincipalEl.textContent = formatCurrency(growthData.summary.totalInvested);
+            totalReturnsEl.textContent = formatCurrency(growthData.summary.totalReturns);
+            totalValueEl.textContent = formatCurrency(growthData.summary.totalValue);
+
+            createOrUpdateChart(growthData);
+            populateDataTable(growthData);
+        }
+
+        function populateDataTable(data) {
+            dataTableBody.innerHTML = ''; // Clear previous data
+            for(let i = 1; i < data.labels.length; i++) {
+                const principal = data.principal[i];
+                const returns = data.returns[i];
+                const annualContribution = data.principal[i] - data.principal[i-1];
+                const annualReturn = data.annualReturns[i];
+                const annualRatioDiff = data.annualRatioDiff[i];
+
+                // Calculate total ratio as a percentage: (returns / principal) * 100
+                const totalRatio = principal > 0 ? `${(returns / principal * 100).toFixed(1)}%` : 'N/A';
+                // Calculate annual ratio
+                const annualRatio = annualContribution > 0 ? `${(annualReturn / annualContribution * 100).toFixed(1)}%` : 'N/A';
+
+                const row = `
+                    <tr class="bg-slate-800 border-b border-slate-700 hover:bg-slate-700">
+                        <td class="px-6 py-2 font-medium text-white">${data.labels[i]}</td>
+                        <td class="px-6 py-2">${formatCurrency(principal)}</td>
+                        <td class="px-6 py-2">${formatCurrency(returns)}</td>
+                        <td class="px-6 py-2 text-amber-400">${totalRatio}</td>
+                        <td class="px-6 py-2 text-cyan-400">${annualRatio}</td>
+                        <td class="px-6 py-2 text-lime-400">${(annualRatioDiff * 100).toFixed(1)}%</td>
+                        <td class="px-6 py-2 font-semibold text-indigo-400">${formatCurrency(principal + returns)}</td>
+                        <td class="px-6 py-2">${formatCurrency(data.realValue[i])}</td>
+                    </tr>
+                `;
+                dataTableBody.innerHTML += row;
+            }
+        }
+
+
+        /**
+         * Creates a new Chart.js instance or updates an existing one.
+         */
+        function createOrUpdateChart(data) {
+            const inflationRate = parseFloat(annualInflationRateEl.value) || 0;
+            const milestoneAnnotations = data.milestones.reduce((acc, milestone) => {
+                acc[`line${milestone.value}`] = {
+                    type: 'line',
+                    xMin: milestone.year,
+                    xMax: milestone.year,
+                    borderColor: 'rgba(244, 114, 182, 0.7)', // pink-400
+                    borderWidth: 1,
+                    borderDash: [5, 5],
+                };
+                acc[`label${milestone.value}`] = {
+                    type: 'label',
+                    xValue: milestone.year,
+                    yValue: milestone.value,
+                    content: [`${milestone.value/1000}K`, `(${milestone.timeFromPrevious.toFixed(1)} yrs)`],
+                    font: { size: 9 },
+                    backgroundColor: 'rgba(244, 114, 182, 0.8)',
+                    borderRadius: 4,
+                    padding: 3,
+                    yAdjust: -15,
+                };
+                return acc;
+            }, {});
+
+            const datasets = [
+                {
+                    label: 'Principal Contributions',
+                    data: data.principal,
+                    backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                    borderColor: '#6366f1',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#6366f1',
+                },
+                {
+                    label: 'Investment Returns',
+                    data: data.returns,
+                    backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                    borderColor: '#10b981',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#10b981',
+                }
+            ];
+
+            if (inflationRate > 0) {
+                datasets.push({
+                    label: 'Real Value (Purchasing Power)',
+                    data: data.realValue,
+                    borderColor: 'rgba(251, 191, 36, 0.8)', // amber-400
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderDash: [5, 5],
+                });
+            }
+
+            const chartData = {
+                labels: data.labels,
+                datasets: datasets
+            };
+            
+            const chartConfig = {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        annotation: {
+                           annotations: milestoneAnnotations
+                        },
+                        legend: {
+                            position: 'bottom',
+                             labels: { color: '#cbd5e1', usePointStyle: true, boxWidth: 8 }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                footer: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const principal = data.principal[index];
+                                    const returns = data.returns[index];
+                                    const total = principal + returns;
+                                    return `Total: ${formatCurrency(total)}`;
+                                },
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== null) label += formatCurrency(context.parsed.y);
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Years', color: '#94a3b8' },
+                            stacked: true,
+                            grid: { color: 'rgba(71, 85, 105, 0.5)' },
+                            ticks: { color: '#cbd5e1' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Total Value ($)', color: '#94a3b8' },
+                            stacked: true,
+                            grid: { color: 'rgba(71, 85, 105, 0.5)' },
+                             ticks: {
+                                color: '#cbd5e1',
+                                callback: function(value) {
+                                    if (value >= 1000000) return `${value / 1000000}M`;
+                                    if (value >= 1000) return `${value / 1000}K`;
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    interaction: { mode: 'index', intersect: false },
+                }
+            };
+
+            if (growthChart) {
+                growthChart.data = chartData;
+                growthChart.options.plugins.annotation.annotations = milestoneAnnotations;
+                growthChart.update();
+            } else {
+                growthChart = new Chart(chartCanvas, chartConfig);
+            }
+        }
+
+        // Event Listeners
+        const allInputs = [initialInvestmentEl, monthlyInvestmentEl, annualInterestRateEl, investmentPeriodEl, annualInflationRateEl];
+        allInputs.forEach(el => el.addEventListener('input', updateDisplay));
+
+        toggleTableBtn.addEventListener('click', () => {
+            const isHidden = dataTableContainer.classList.toggle('hidden');
+            toggleTableBtn.textContent = isHidden ? 'Show Data Table' : 'Hide Data Table';
+        });
+
+        // Initial call
+        document.addEventListener('DOMContentLoaded', updateDisplay);
+
+    </script>
+</body>
+</html>
+
+
+
+
+
+
